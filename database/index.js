@@ -5,12 +5,25 @@ let repoSchema = mongoose.Schema({
   repoId: Number,
   name: String,
   owner: String,
+  url: String,
   watchers: Number
 });
 
 let Repo = mongoose.model('Repo', repoSchema);
 
-let save = (data, callback) => {
+let get = () => {
+  return Repo.find({})
+    .then((docs) => {
+      var sortedDocs = docs.sort((a, b) => b.watchers - a.watchers);
+      var top25 = sortedDocs.slice(0, 25);
+      console.log('repo find docs', top25);
+      return top25;
+    })
+    .catch(err => { return err; });
+}
+
+
+let save = (data) => {
   // TODO: Your code here
   // This function should save a repo or repos to
   // the MongoDB
@@ -18,23 +31,18 @@ let save = (data, callback) => {
     repoId: data.id,
     name: data.name,
     owner: data.owner.login,
+    url: data.html_url,
     watchers: data.watchers
   });
 
-  // Repo.deleteMany({})
-  // .then(count => { callback(null, count); })
-  // .catch(err => { callback(err); });
 
-
-  Repo.find({ repoId: data.id })
+  Repo.find({ repoId: repo.repoId })
     .then(doc => {
       if (doc.length === 0) {
-        repo.save();
-        callback(null, 'success');
+        return repo.save();
       }
     })
-    .catch(err => { callback(err); });
-
 }
 
 module.exports.save = save;
+module.exports.get = get;
